@@ -18,5 +18,16 @@ array_a = np.array([1,2,3,4,5])
 | --- | --- |
 | `array_b = np.where(array_a >= 3, -1, 1)` | array_b = [ 1  1 -1 -1 -1] |
 | `array_b = np.where(array_a >= 3, array_a*10, array_a)` | array_b = [ 1  2 30 40 50]|
+| `a = np.empty((0,3), int)` | Create a new numpy for appending or stacking |
+| `img = np.zeros([100,100,3],dtype=np.uint8) then img.fill(255) # or img[:] = 255` | create an empty black or white image
+| `id_x = np.where((points[:,0] > x_min) & (points[:,0] < x_max))` | Get the id of desired part by filtering|
+| `id_x =  points[:,0] > x_min) & (points[:,0] < x_max` | Get boolean array to filter data|
+| `np.linspace(min_value, max_value, num=int((max-min)/dist),endpoint=True)` | Create data or points between two number|
+| `np.min(points,axis =0),np.max(points,axis =0),np.mean(points,axis =0)` | Get Min, Max, Mean of points
+| `points3D = np.vstack((f.x, f.y, f.z)).transpose()` | From las files to numpy in n*3 format
+| `np.linalg.norm(ppts2d - np.array([x, y]), axis=1)` | Calc distance of a vec elements to a point
+| `diff_to_min = ppts2d - np.array([x, y])` | Calc difference of a vec elements to a point (signed)
+| `filter_axe = np.all(diff_to_min > 0, axis=1)` | find 2d points bigger than desired values in both x, y
+
 
 
