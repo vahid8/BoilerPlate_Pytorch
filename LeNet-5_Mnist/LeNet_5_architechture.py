@@ -14,17 +14,18 @@ class LeNet5(torch.nn.Module):
             in_channels = 3
 
         self.features = torch.nn.Sequential(
-
+            # Block 1
             torch.nn.Conv2d(in_channels, 6, kernel_size=5),
             torch.nn.Tanh(),
             torch.nn.MaxPool2d(kernel_size=2),
+            # Block 2
             torch.nn.Conv2d(6, 16, kernel_size=5),
             torch.nn.Tanh(),
             torch.nn.MaxPool2d(kernel_size=2)
         )
 
         self.classifier = torch.nn.Sequential(
-            torch.nn.Linear(16 * 5 * 5, 120),
+            torch.nn.Linear(16 * 5 * 5, 120), # first fc layer
             torch.nn.Tanh(),
             torch.nn.Linear(120, 84),
             torch.nn.Tanh(),
@@ -32,7 +33,8 @@ class LeNet5(torch.nn.Module):
         )
 
     def forward(self, x):
-        x = self.features(x)
-        x = torch.flatten(x, 1)
+        x = self.features(x) # NCHW format
+        x = torch.flatten(x, 1) # N =C*H*W
+        # print(x.size(1))
         logits = self.classifier(x)
         return logits

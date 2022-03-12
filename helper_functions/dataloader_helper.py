@@ -22,7 +22,7 @@ class UnNormalize(object):
         Tensor: Normalized image.
         """
         for t, m, s in zip(tensor, self.mean, self.std):
-            t.mul_(s).add_(m)
+            t.mul_(s).add_(m) # multiply by std and add by mean
         return tensor
 
 

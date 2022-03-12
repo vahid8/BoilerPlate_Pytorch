@@ -87,7 +87,7 @@ DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 resize_transform = torchvision.transforms.Compose(
     [torchvision.transforms.Resize((32, 32)),
      torchvision.transforms.ToTensor(),
-     torchvision.transforms.Normalize((0.5,), (0.5,))])
+     torchvision.transforms.Normalize((0.5,), (0.5,))]) # normalize to center at zero and between 1 & -1
 
 
 train_loader, valid_loader, test_loader = get_dataloaders_mnist(

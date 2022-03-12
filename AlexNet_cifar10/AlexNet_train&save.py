@@ -6,9 +6,9 @@ import time
 
 from helper_functions.evaluation_helper import compute_confusion_matrix, compute_accuracy
 from helper_functions.plotting_helper import plot_training_loss, plot_accuracy, show_examples, plot_confusion_matrix
-from helper_functions.dataloader_helper import get_dataloaders_mnist
+from helper_functions.dataloader_helper import get_dataloaders_cifar10, UnNormalize
 
-from AlexNet_architechture import LeNet5
+from AlexNet_architechture import AlexNet
 
 def train_model(model, num_epochs, train_loader,
                 valid_loader, test_loader, optimizer,
@@ -77,22 +77,24 @@ def train_model(model, num_epochs, train_loader,
 ### SETTINGS
 ##########################
 BATCH_SIZE = 256
-NUM_EPOCHS = 50
+NUM_EPOCHS = 200
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 ##########################
 ### MNIST DATASET
 ##########################
-
 train_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.Resize((70, 70)),  # cifar images are 32*32 we make it larger otherwise we get problem with the dimensions at final layers
+    torchvision.transforms.RandomCrop((64, 64)),  # to make model more robust against the over fitting
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
+                                      ])  # normalizing the color channels
 
 test_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.Resize((70, 70)),
+    torchvision.transforms.CenterCrop((64, 64)), # we dont want random crop on test or validation data
     torchvision.transforms.ToTensor(),
-    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
+    torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
 train_loader, valid_loader, test_loader = get_dataloaders_cifar10(
@@ -110,7 +112,7 @@ for images, labels in train_loader:
     break
 
 
-model = ConvNet(num_classes=10)
+model = AlexNet(num_classes=10)
 
 model = model.to(DEVICE)
 
@@ -146,7 +148,7 @@ plt.ylim([60, 100])
 plt.show()
 
 model.cpu()
-unnormalizer = UnNormalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+unnormalizer = UnNormalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # un normalize images to plot them
 class_dict = {0: 'airplane',
               1: 'automobile',
               2: 'bird',
@@ -165,7 +167,7 @@ plot_confusion_matrix(mat, class_names=class_dict.values())
 plt.show()
 
 # Saving the model
-# torch.save(model.state_dict(), 'my_trained_model/my_LeNet5_model.pt')
-# torch.save(optimizer.state_dict(), 'my_trained_model/my_LeNet5_optimizer.pt')
-# torch.save(model.state_dict(), 'my_trained_model/my_LeNet5_scheduler.pt')
+torch.save(model.state_dict(), 'my_trained_model/my_AlexNet_model.pt')
+torch.save(optimizer.state_dict(), 'my_trained_model/my_AlexNet_optimizer.pt')
+torch.save(model.state_dict(), 'my_trained_model/my_AlexNet_scheduler.pt')
 
