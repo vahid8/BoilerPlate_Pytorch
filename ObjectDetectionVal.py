@@ -79,15 +79,13 @@ class bboxEvaluation:
         data = []
         label_files = [item for item in os.listdir(self.label_dir) if item.endswith(".txt")]
         for text_file in label_files:
-            image = cv2.imread(os.path.join(self.image_dir, text_file[:-3] + "jpg"))
-
             with open(os.path.join(self.label_dir, text_file)) as current_label_file:
                 lines = current_label_file.read().splitlines()
                 records = [item.split(" ") for item in lines]
                 if len(records) > 0:
                     if len(records[0]) > 2:
-                        boxes = np.array([[float(item[1]) * image.shape[0], float(item[2]) * image.shape[1],
-                                           float(item[3]) * image.shape[0], float(item[4]) * image.shape[1]]
+                        boxes = np.array([[float(item[1]), float(item[2]),
+                                           float(item[3]), float(item[4])]
                                           for item in records])
                         boxes[:, 0] = boxes[:, 0] - boxes[:, 2] / 2
                         boxes[:, 1] = boxes[:, 1] - boxes[:, 3] / 2

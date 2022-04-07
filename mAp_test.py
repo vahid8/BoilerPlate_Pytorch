@@ -13,14 +13,13 @@ if __name__ == '__main__':
     label_files = [item for item in os.listdir(detection_dir) if item.endswith(".txt")]
     data = []
     for text_file in label_files:
-        image = cv2.imread(os.path.join(image_dir, text_file[:-3] + "jpg"))
         with open(os.path.join(detection_dir, text_file)) as current_label_file:
             lines = current_label_file.read().splitlines()
             records = [item.split(" ") for item in lines]
             if len(records) > 0:
                 if len(records[0]) > 2:
-                    boxes = np.array([[float(item[1]) * image.shape[0], float(item[2]) * image.shape[1],
-                                       float(item[3]) * image.shape[0], float(item[4]) * image.shape[1]]
+                    boxes = np.array([[float(item[1]), float(item[2]),
+                                       float(item[3]), float(item[4])]
                                       for item in records if len(item) > 2])
 
                     boxes[:, 0] = boxes[:, 0] - boxes[:, 2] / 2
@@ -37,5 +36,5 @@ if __name__ == '__main__':
     predicted_df = pd.DataFrame(data, columns=["image_name", "label", "bbox", "conf"])
 
     evaluator = bboxEvaluation(gt_dir, image_dir)
-    evaluator.calc_mAP(predicted_df)
+    evaluator.calc_mAP(predicted_df, print_details=True)
 
