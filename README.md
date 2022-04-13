@@ -31,7 +31,7 @@ array_a = np.array([1,2,3,4,5])
 
 
 ### Read detection text files in yolo and convert it to pascal
-`
+```
 img_w = image.shape[0]                      
 img_H = image.shape[1]                      
 files = [line.strip().split() for line in open(os.path.join(self.label_dir, label_file))]                     
@@ -40,6 +40,6 @@ bboxes = [[int((float(item[1]) - (float(item[3]) / 2)) * img_w),  # x_min
            int((float(item[1]) + (float(item[3]) / 2)) * img_w),  # x_max               
            int((float(item[2]) + (float(item[4]) / 2)) * img_H)]  # y_max               
           for item in files]                
-`
+```
 
                       
