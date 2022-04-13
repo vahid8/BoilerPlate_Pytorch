@@ -30,4 +30,24 @@ array_a = np.array([1,2,3,4,5])
 | `filter_axe = np.all(diff_to_min > 0, axis=1)` | find 2d points bigger than desired values in both x, y
 
 
+### Read detection text files in yolo and convert it to pascal
+`
+img_w = image.shape[0]
+img_H = image.shape[1]
+# -------------------------------------------------
+# Read detections labeled in yolo format [x_center, y_center, width, height] normalized and between 0-1
+# -------------------------------------------------
+files = [line.strip().split() for line in open(os.path.join(self.label_dir, label_file))]
 
+# -------------------------------------------------
+# Transform them to Pascal format [x_min, y_min, x_max, y_max]
+# This format is needed for Faster RCNN and Mask-RCNN
+# -------------------------------------------------
+bboxes = [[int((float(item[1]) - (float(item[3]) / 2)) * img_w),  # x_min
+           int((float(item[2]) - (float(item[4]) / 2)) * img_H),  # y_min
+           int((float(item[1]) + (float(item[3]) / 2)) * img_w),  # x_max
+           int((float(item[2]) + (float(item[4]) / 2)) * img_H)]  # y_max
+          for item in files]
+`
+
+                      
