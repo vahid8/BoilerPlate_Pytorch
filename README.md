@@ -34,15 +34,7 @@ array_a = np.array([1,2,3,4,5])
 `
 img_w = image.shape[0]
 img_H = image.shape[1]
-# -------------------------------------------------
-# Read detections labeled in yolo format [x_center, y_center, width, height] normalized and between 0-1
-# -------------------------------------------------
 files = [line.strip().split() for line in open(os.path.join(self.label_dir, label_file))]
-
-# -------------------------------------------------
-# Transform them to Pascal format [x_min, y_min, x_max, y_max]
-# This format is needed for Faster RCNN and Mask-RCNN
-# -------------------------------------------------
 bboxes = [[int((float(item[1]) - (float(item[3]) / 2)) * img_w),  # x_min
            int((float(item[2]) - (float(item[4]) / 2)) * img_H),  # y_min
            int((float(item[1]) + (float(item[3]) / 2)) * img_w),  # x_max
