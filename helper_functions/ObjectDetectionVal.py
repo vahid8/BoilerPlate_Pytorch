@@ -66,12 +66,12 @@ class bboxEvaluation:
             print("label".ljust(10,' ')+"|"+"meanP".ljust(10,' ')+"|"+"meanR".ljust(10,' ')+"|"+"AP@0.5".ljust(10, ' '))
             print("".ljust(10, '-') + "|" + "".ljust(10, '-'))
             for l, p, r, AP in zip(all_labels, all_P, all_R, all_AP):
-                print(f"{str(l).ljust(10,' ')}|{str(p).ljust(10,' ')}|{str(r).ljust(10,' ')}|"
+                print(f"{str(l).ljust(10,' ')}|{str(p*100).ljust(10,' ')}|{str(r*100).ljust(10,' ')}|"
                       f"{str(round(AP*100,2)).ljust(10,' ')}")
 
         print("-"*50)
-        print("meanP".ljust(20, ' ') + "MeanR".ljust(20, ' ') + "mAP@0.5".ljust(20, ' '))
-        print(f"{str(round(sum(all_P)/len(all_P),2)).ljust(20,' ')}{str(round(sum(all_R)/len(all_R),2)).ljust(20,' ')}"
+        print("meanP(%)".ljust(20, ' ') + "MeanR(%)".ljust(20, ' ') + "mAP@0.5(%)".ljust(20, ' '))
+        print(f"{str(round((sum(all_P)/len(all_P))*100,2)).ljust(20,' ')}{str(round((sum(all_R)/len(all_R))*100,2)).ljust(20,' ')}"
               f"{str(round((sum(all_AP)/len(all_AP))*100,2)).ljust(20,' ')}")
 
 
@@ -118,36 +118,39 @@ class bboxEvaluation:
 
         iou_all = list()
         for item in pred_bboxes:
-            # create a numpy array from upper left corners of gt
-            current_up_left_corner = np.array([item[0], item[1]]).reshape(1, 2)
-            # find the nearest bbox in ground truth
-            idx = np.argmin(np.linalg.norm((current_up_left_corner - gt_up_left_corners), axis=1))
-            ##-------------- calculate the iou
-            # calculate the intersection (the area between min of upper left and max of lower right
-            temp_gt = ground_truth_bboxes[idx]
+            if len(gt_up_left_corners)>0:
+                # create a numpy array from upper left corners of gt
+                current_up_left_corner = np.array([item[0], item[1]]).reshape(1, 2)
+                # find the nearest bbox in ground truth
+                idx = np.argmin(np.linalg.norm((current_up_left_corner - gt_up_left_corners), axis=1))
+                ##-------------- calculate the iou
+                # calculate the intersection (the area between min of upper left and max of lower right
+                temp_gt = ground_truth_bboxes[idx]
 
-            # check if there is any intersection ( check start and end point of bbox against upper left point of gt
-            x_sign = (item[0] - temp_gt[0]) * (item[2] - temp_gt[0])
-            y_sign = (item[1] - temp_gt[1])* (item[3] - temp_gt[1])
+                # check if there is any intersection ( check start and end point of bbox against upper left point of gt
+                x_sign = (item[0] - temp_gt[0]) * (item[2] - temp_gt[0])
+                y_sign = (item[1] - temp_gt[1])* (item[3] - temp_gt[1])
 
-            if x_sign <= 0 and y_sign <= 0:
-                upper_left_x = min([item[0], temp_gt[0]])
-                upper_left_y = min([item[1], temp_gt[1]])
+                if x_sign <= 0 and y_sign <= 0:
+                    upper_left_x = min([item[0], temp_gt[0]])
+                    upper_left_y = min([item[1], temp_gt[1]])
 
-                lower_right_x = max([item[2], temp_gt[2]])
-                lower_right_y = max([item[3], temp_gt[3]])
+                    lower_right_x = max([item[2], temp_gt[2]])
+                    lower_right_y = max([item[3], temp_gt[3]])
 
-                intersection_area = (upper_left_x - lower_right_x) * (upper_left_y - lower_right_y)
+                    intersection_area = (upper_left_x - lower_right_x) * (upper_left_y - lower_right_y)
 
-                # calculate the union (all)
-                area_1 = (item[2] - item[0]) * (item[3] - item[1])
-                area_2 = (temp_gt[2] - temp_gt[0]) * (temp_gt[3] - temp_gt[1])
-                union = area_2 + area_1 - intersection_area
+                    # calculate the union (all)
+                    area_1 = (item[2] - item[0]) * (item[3] - item[1])
+                    area_2 = (temp_gt[2] - temp_gt[0]) * (temp_gt[3] - temp_gt[1])
+                    union = area_2 + area_1 - intersection_area
 
-                # calculate iou
-                iou = intersection_area / (union + 1e-8)
+                    # calculate iou
+                    iou = intersection_area / (union + 1e-8)
 
-            else:  # No intersection
+                else:  # No intersection
+                    iou = 0
+            else:
                 iou = 0
 
             iou_all.append(iou)

@@ -5,6 +5,25 @@ import numpy as np
 import torch
 
 
+class UnNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, tensor):
+        """
+        Parameters:
+        ------------
+        tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+
+        Returns:
+        ------------
+        Tensor: Normalized image.
+        """
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m) # multiply by std and add by mean
+        return tensor
+
 def plot_training_loss(minibatch_loss_list, num_epochs, iter_per_epoch,
                        results_dir=None, averaging_iterations=100):
     plt.figure()
@@ -69,7 +88,8 @@ def plot_accuracy(train_acc_list, valid_acc_list, results_dir):
         plt.savefig(image_path)
 
 
-def show_examples(model, data_loader, unnormalizer=None, class_dict=None):
+def show_examples(model, data_loader, unnormalizer=False, class_dict=None):
+
     for batch_idx, (features, targets) in enumerate(data_loader):
         with torch.no_grad():
             features = features
@@ -78,36 +98,31 @@ def show_examples(model, data_loader, unnormalizer=None, class_dict=None):
             predictions = torch.argmax(logits, dim=1)
         break
 
-    fig, axes = plt.subplots(nrows=3, ncols=5,
-                             sharex=True, sharey=True)
 
-    if unnormalizer is not None:
-        for idx in range(features.shape[0]):
-            features[idx] = unnormalizer(features[idx])
-    nhwc_img = np.transpose(features, axes=(0, 2, 3, 1))
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
 
-    if nhwc_img.shape[-1] == 1:
-        nhw_img = np.squeeze(nhwc_img.numpy(), axis=3)
+    images = []
+    for idx in range(features.shape[0]):
+        img = features[idx].numpy().transpose((1, 2, 0))
 
-        for idx, ax in enumerate(axes.ravel()):
-            ax.imshow(nhw_img[idx], cmap='binary')
-            if class_dict is not None:
-                ax.title.set_text(f'P: {class_dict[predictions[idx].item()]}'
-                                  f'\nT: {class_dict[targets[idx].item()]}')
-            else:
-                ax.title.set_text(f'P: {predictions[idx]} | T: {targets[idx]}')
-            ax.axison = False
+        if unnormalizer:
+            img = std * img + mean
 
-    else:
+        img = np.clip(img, 0, 1)
+        images.append(img)
 
-        for idx, ax in enumerate(axes.ravel()):
-            ax.imshow(nhwc_img[idx])
-            if class_dict is not None:
-                ax.title.set_text(f'P: {class_dict[predictions[idx].item()]}'
-                                  f'\nT: {class_dict[targets[idx].item()]}')
-            else:
-                ax.title.set_text(f'P: {predictions[idx]} | T: {targets[idx]}')
-            ax.axison = False
+    # fig, axes = plt.subplots(nrows=2, ncols=2,
+    #                          sharex=True, sharey=True)
+
+    predictions = predictions.numpy()
+    targets = targets.numpy()
+
+    for idx in range(4):
+        ax = plt.subplot(2, 2, idx + 1)
+        ax.imshow(images[idx])
+        ax.set_title(f"prediction: {class_dict[predictions[idx]]}\n target: {class_dict[targets[idx]]}")
+
     plt.tight_layout()
     plt.show()
 
