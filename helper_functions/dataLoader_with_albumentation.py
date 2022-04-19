@@ -81,7 +81,7 @@ class TrainDataset(Dataset):
             print(os.path.join(self.image_dir, image_name))
             exit()
 
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         img_w = image.shape[0]
         img_H = image.shape[1]
 
@@ -104,15 +104,23 @@ class TrainDataset(Dataset):
 
             current_labels = [int(item[0])+1 for item in files]  # reserve label 0 for background
 
+            area = [(item[2]-item[0])*(item[3]-item[1]) for item in bboxes]
+
         else:
             bboxes = []
             current_labels = []
+            area = []
 
-        #image /= 255.0 # for more stabilty of trainings
+        image /= 255.0  # for more stabilty of trainings
+
         transformed = self.image_bbox_albumentation({"image": image, "bboxes": bboxes, "labels": current_labels})
 
         target = {"boxes": torch.tensor(transformed['bboxes'], dtype=torch.float32),
-                  "labels": torch.as_tensor(transformed['class_labels'], dtype=torch.int64)}
+                  "labels": torch.as_tensor(transformed['class_labels'], dtype=torch.int64),
+                  'image_id': torch.tensor([index]),
+                  'area': torch.as_tensor(area, dtype=torch.float32),
+                  'iscrowd': torch.zeros((len(current_labels),), dtype=torch.int64)
+        }
 
         return transformed['image'], target, image_name
 
@@ -126,8 +134,8 @@ class TrainDataset(Dataset):
             # A.HorizontalFlip(p=0.5),
             # A.RandomBrightnessContrast(p=0.2),
             A.Resize(self.ImageSize, self.ImageSize),
-            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0,
-                        always_apply=False, p=1.0), # do image normalization so pixel values willl be around 0,1 by mean 0.5
+            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0,
+            #             always_apply=False, p=1.0), # do image normalization so pixel values willl be around 0,1 by mean 0.5
             A.pytorch.transforms.ToTensorV2(p=1.0)
         ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['class_labels']))
 

@@ -20,16 +20,14 @@ if __name__ == '__main__':
     ### SETTINGS
     ##########################
     BATCH_SIZE = 8
-    NUM_EPOCHS = 15
+    NUM_EPOCHS = 7
     NUM_CLASSES = 3
     IMG_SIZE = 1280
+    pretraide_model = False
 
-    DIR_INPUT = '/media/vahid/Elements/Data/blurring_training_data'
-    DIR_OUT = ""
+    DIR_INPUT = '/home/tower/Codes/face_plate_data'
+    DIR_OUT = "/home/tower/Codes/faster_out_test"
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-
-
     # -------------------------------------------------
     # Initialize our custom data loader
     # -------------------------------------------------
@@ -84,7 +82,7 @@ if __name__ == '__main__':
     ### DEFINE MODEL
     ##########################
     # load a mcodel; pre-trained on COCO
-    backbone = resnet_fpn_backbone('resnet101', pretrained=True)
+    backbone = resnet_fpn_backbone('resnet152', pretrained=True)
     model = FasterRCNN(backbone, num_classes=NUM_CLASSES)
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
@@ -92,7 +90,7 @@ if __name__ == '__main__':
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, NUM_CLASSES)
     model.to(device)
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.0001, momentum=0.9, weight_decay=0.0005)
+    optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.8)
     for param_group in optimizer.param_groups:
         print(f"current learning rate {param_group['lr']}")
@@ -104,13 +102,16 @@ if __name__ == '__main__':
     # ### loading the model
     # model.load_state_dict(torch.load('test_model/my_ResNet_model.pt'))
     # model.eval()
-    # if pretraide_model:
-    #     checkpoint_path = config["DIR_OUT"] + pretrained_name
-    #     checkpoint = torch.load(checkpoint_path)
-    #     model.load_state_dict(checkpoint['model_state_dict'])
-    #     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    #     # epoch = checkpoint['epoch']
-    #     loss = checkpoint['loss']
+    if pretraide_model:
+        # checkpoint_path = config["DIR_OUT"] + pretrained_name
+        # checkpoint = torch.load(checkpoint_path)
+        # model.load_state_dict(checkpoint['model_state_dict'])
+        # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        # # epoch = checkpoint['epoch']
+        # loss = checkpoint['loss']
+        model.load_state_dict(torch.load('test_model/my_ResNet_model.pt'))
+        optimizer.load_state_dict(torch.load('test_model/my_ResNet_optimizer.pt'))
+        lr_scheduler.load_state_dict(torch.load('test_model/my_ResNet_scheduler.pt'))
 
     ##########################
     ### TRAIN THE MODEL
@@ -146,9 +147,12 @@ if __name__ == '__main__':
             # ## LOGGING for mini batches at intervals
             minibatch_loss_list.append(losses.item())
             if not batch_idx % logging_interval:
+                itr += 1
                 print(f'Epoch: {epoch + 1:03d}/{NUM_EPOCHS:03d} '
                       f'| Batch {batch_idx:04d}/{len(train_loader):04d} '
                       f'| Loss: {losses:.4f}')
+
+
 
         # Saving the model
         torch.save(model.state_dict(), 'test_model/my_ResNet_model.pt')
@@ -169,7 +173,7 @@ if __name__ == '__main__':
         model.eval()  # activate interface mode of the model (batchnorm or dropout layers will work in eval mode instead of training mode.)
 
         with torch.no_grad():  # impacts the autograd engine and deactivate it. It will reduce memory usage and speed up computations but you won’t be able to backprop
-            for images, targets, image_name in tqdm(val_loader,
+            for images, targets, image_name in tqdm.tqdm(val_loader,
                                                     desc="validation " + str(epoch) + "/" + str(NUM_EPOCHS)):
                 step_num += 1
                 images = list(image.to(device) for image in images)
@@ -209,6 +213,7 @@ if __name__ == '__main__':
             }, DIR_OUT + "/checkpoint_" + str(checkpoint_num) + ".pt")
             checkpoint_num += 1
 
+
     # save last checkpoint
     print("saving checkpoint")
     torch.save({
@@ -219,6 +224,6 @@ if __name__ == '__main__':
     }, DIR_OUT + "/checkpoint_last.pt")
 
     # Save the last model
-    torch.save(model.state_dict(), DIR_OUT + '/temp.pth')
+    torch.save(model.state_dict(), DIR_OUT + '/last.pth')
 
 
