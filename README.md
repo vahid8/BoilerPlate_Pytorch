@@ -1,3 +1,6 @@
+## pytorch installation
+cuda toolkit archive: ``` https://developer.nvidia.com/cuda-toolkit-archive ```
+
 ## Shortcuts pytorch
 | Command | Description |
 | --- | --- |
